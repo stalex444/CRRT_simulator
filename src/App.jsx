@@ -477,9 +477,8 @@ export default function CRRTSimulator() {
         };
       });
     }, 1000);
-    }, 1000);
     return () => clearInterval(iv);
-  }, [set, spd, fs, pt, ff, time]);
+  }, [set, spd, fs, pt, ff]);
 
   const fmt = s => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 
