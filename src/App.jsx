@@ -19,29 +19,47 @@ const Phys = {
     const post = bfr + pfr / 60 - eff / 60;
     return post > 0 ? Math.min(70, (rbc / post) * 100) : 70;
   },
-  ureaClearance: (bfr, dial, uf, fe = 1) => Math.min(bfr, ((dial / 60) * (1 - Math.exp(-bfr / (dial / 60 + 10))) + uf / 60) * fe),
-  circuitCa: (pbp, bfr) => Math.max(0.1, Math.min(1.5, 1.2 - ((pbp / 60) * 4 / 1000 / 3) / bfr * 1000)),
-  calcTMP: (base, age, bfr, hct, ac, pfr, ff, effluent) => {
-    // TMP responds to: BFR, effluent rate, FF, filter age, anticoagulation
-    const bfrFactor = 1 + (bfr - 150) * 0.002; // Higher BFR = higher TMP
-    const effFactor = 1 + (effluent - 1500) * 0.0003; // Higher effluent = higher TMP
-    const hctFactor = 1 + Math.max(0, hct - 30) * 0.02;
-    const ffFactor = ff > 20 ? 1 + (ff - 20) * 0.015 : 1; // High FF increases TMP
-    const ageFactor = 1 + age * 0.02; // Filter ages over time
-    const acFactor = 2 - ac; // Poor anticoag = higher TMP
-    return base * bfrFactor * effFactor * hctFactor * ffFactor * ageFactor * acFactor;
+  
+  // TMP - More responsive to all parameters
+  calcTMP: (bfr, hct, ff, effluent, filterAge, clot) => {
+    // Base TMP around 100
+    let tmp = 80;
+    // BFR effect: higher flow = higher TMP (significant effect)
+    tmp += (bfr - 150) * 0.3;
+    // Effluent effect: more removal = higher TMP
+    tmp += (effluent - 1500) * 0.02;
+    // Hematocrit effect: thicker blood = higher TMP
+    tmp += Math.max(0, hct - 30) * 3;
+    // FF effect: high FF = much higher TMP (exponential)
+    if (ff > 20) tmp += Math.pow(ff - 20, 1.5) * 2;
+    // Filter age effect
+    tmp += filterAge * 5;
+    // Clotting effect
+    tmp += clot * 150;
+    return Math.max(50, Math.min(450, tmp));
   },
-  calcAccess: (bfr, p = 0.9) => Math.max(-350, -40 - bfr * 0.12 - (1 - p) * 180),
-  calcReturn: (bfr, c) => Math.min(400, 25 + bfr * 0.12 + c * 120),
-  calcDeltaP: (bfr, c, hct) => Math.min(250, 15 + bfr * 0.08 + c * 180 + Math.max(0, hct - 30) * 1.5),
+  
+  // Access pressure - more responsive to BFR
+  calcAccess: (bfr) => {
+    // More negative with higher BFR
+    return Math.max(-350, Math.min(-20, -30 - bfr * 0.25));
+  },
+  
+  // Return pressure - responds to BFR and clotting
+  calcReturn: (bfr, clot) => {
+    return Math.min(400, 20 + bfr * 0.2 + clot * 150);
+  },
+  
+  // Delta P - responds to BFR, clotting, and hematocrit
+  calcDeltaP: (bfr, clot, hct) => {
+    let dp = 20;
+    dp += (bfr - 150) * 0.15;
+    dp += clot * 200;
+    dp += Math.max(0, hct - 30) * 2;
+    return Math.max(10, Math.min(300, dp));
+  },
+  
   filterEff: (age, c, ff) => Math.max(0.3, Math.exp(-age / 72) * (1 - c * 0.5) * (ff > 25 ? 1 - (ff - 25) * 0.01 : 1)),
-  drugs: {
-    vancomycin: { n: '15-20 mg/kg q8-12h', c: '500-750 mg q12h + levels', note: 'Target trough 15-20', cl: (e, f) => (e / 60) * 0.45 * 0.8 * f },
-    meropenem: { n: '1g q8h', c: '1g q8h or 500mg q6h', note: 'Extended infusion preferred', cl: (e, f) => (e / 60) * 0.98 * 0.95 * f },
-    piperacillin: { n: '4.5g q6h', c: '4.5g q8h', note: 'Time-dependent killing', cl: (e, f) => (e / 60) * 0.7 * 0.9 * f },
-    gentamicin: { n: '5-7 mg/kg q24h', c: '2-3 mg/kg q24-48h + levels', note: 'Follow peak/trough', cl: (e, f) => (e / 60) * 0.95 * 0.95 * f },
-    fluconazole: { n: '400-800mg daily', c: '400-800mg daily', note: 'Load 800mg first', cl: (e, f) => (e / 60) * 0.89 * 0.95 * f }
-  }
 };
 
 const getFFStatus = (ff) => {
@@ -148,11 +166,10 @@ const Gauge = ({ label, value, min, max, inverted = false }) => {
   );
 };
 
-const FFPanel = ({ bfr, hct, pfr, eff }) => {
-  const ff = Phys.filtrationFraction(bfr, hct, pfr, eff);
+const FFPanel = ({ bfr, hct, eff }) => {
+  const ff = Phys.filtrationFraction(bfr, hct, 0, eff);
   const s = getFFStatus(ff);
   const pf = Phys.plasmaFlow(bfr, hct);
-  const pff = Phys.plasmaFlowAtFilter(bfr, hct, pfr);
   return (
     <div style={{ background: '#0a1525', border: `2px solid ${s.col}55`, borderRadius: '6px', padding: '8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -174,9 +191,7 @@ const FFPanel = ({ bfr, hct, pfr, eff }) => {
       </div>
       <div style={{ fontSize: '8px', background: '#0a1218', borderRadius: '4px', padding: '6px', border: '1px solid #2a3a4a' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}><span style={{ color: '#99aabb' }}>Plasma flow:</span><span style={{ color: '#88ddff', fontFamily: 'monospace', fontWeight: '600' }}>{pf.toFixed(0)} mL/min</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}><span style={{ color: '#99aabb' }}>+ PFR:</span><span style={{ color: '#ffdd66', fontFamily: 'monospace', fontWeight: '600' }}>+{(pfr/60).toFixed(1)}</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #3a4a5a', paddingTop: '3px', marginTop: '2px' }}><span style={{ color: '#99aabb' }}>At filter:</span><span style={{ color: '#66ffff', fontFamily: 'monospace', fontWeight: '700' }}>{pff.toFixed(0)} mL/min</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: '#99aabb' }}>Effluent:</span><span style={{ color: '#ffdd66', fontFamily: 'monospace', fontWeight: '600' }}>{(eff/60).toFixed(1)} mL/min</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #3a4a5a', paddingTop: '3px', marginTop: '2px' }}><span style={{ color: '#99aabb' }}>UF Rate:</span><span style={{ color: '#ffdd66', fontFamily: 'monospace', fontWeight: '600' }}>{(eff/60).toFixed(1)} mL/min</span></div>
       </div>
     </div>
   );
@@ -190,7 +205,6 @@ const Circuit = ({ set, pr, fs, run, ff }) => {
     <svg viewBox="0 0 520 135" style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #001428 0%, #001a30 100%)', borderRadius: '6px' }}>
       <defs>
         <linearGradient id="bgPBP" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#0066cc"/><stop offset="100%" stopColor="#003366"/></linearGradient>
-        <linearGradient id="bgPFR" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#ccaa00"/><stop offset="100%" stopColor="#665500"/></linearGradient>
         <linearGradient id="bgDia" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#00cc44"/><stop offset="100%" stopColor="#006622"/></linearGradient>
         <linearGradient id="bgRep" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#cc4488"/><stop offset="100%" stopColor="#662244"/></linearGradient>
         <linearGradient id="bgEff" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#ccaa00"/><stop offset="100%" stopColor="#554400"/></linearGradient>
@@ -226,77 +240,73 @@ const Circuit = ({ set, pr, fs, run, ff }) => {
       </g>
 
       {/* Line to filter */}
-      <path d="M 135 52 L 200 52" fill="none" stroke="#aa0000" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M 135 52 L 170 52" fill="none" stroke="#aa0000" strokeWidth="6" strokeLinecap="round"/>
 
-      {/* PFR Bag */}
-      <g transform="translate(155, 2)">
-        <rect x="0" y="0" width="32" height={bagHeight} rx="4" fill="url(#bgPFR)" stroke="#ffdd44" strokeWidth="2"/>
-        <rect x="4" y={4 + (bagHeight - 12) * (1 - Math.min(1, set.pfr/1500))} width="24" height={(bagHeight - 12) * Math.min(1, set.pfr/1500)} rx="2" fill="#ffcc00" opacity="0.7"/>
-        <text x="16" y={bagHeight + 10} textAnchor="middle" fill="#ffdd44" fontSize="8" fontWeight="700">PFR</text>
-        <text x="16" y={bagHeight + 18} textAnchor="middle" fill="#ffee88" fontSize="7">{set.pfr}</text>
-        <line x1="16" y1={bagHeight} x2="16" y2="52" stroke="#ffdd44" strokeWidth="2" strokeDasharray="3,2"/>
-      </g>
-
-      {/* FILTER */}
-      <g transform="translate(205, 22)">
-        <rect x="0" y="0" width="60" height="60" rx="5" fill="#0a1a2a" stroke={ffs.col} strokeWidth="3"/>
-        <rect x="5" y="5" width="50" height="50" rx="3" fill="#051525"/>
-        {[0,1,2,3,4,5].map(i => (
-          <line key={i} x1="10" y1={12 + i*8} x2="50" y2={12 + i*8} stroke="#ff8800" strokeWidth="3" opacity={Math.max(0.2, 1 - fs.clot * 0.8)} strokeLinecap="round"/>
+      {/* FILTER - HORIZONTAL like real PrisMax */}
+      <g transform="translate(170, 32)">
+        <rect x="0" y="0" width="80" height="40" rx="5" fill="#0a1a2a" stroke={ffs.col} strokeWidth="3"/>
+        <rect x="5" y="5" width="70" height="30" rx="3" fill="#051525"/>
+        {[0,1,2,3,4,5,6].map(i => (
+          <line key={i} x1={12 + i*10} y1="8" x2={12 + i*10} y2="32" stroke="#ff8800" strokeWidth="3" opacity={Math.max(0.2, 1 - fs.clot * 0.8)} strokeLinecap="round"/>
         ))}
-        <text x="30" y="72" textAnchor="middle" fill={ffs.col} fontSize="10" fontWeight="700" filter="url(#glow)">FF {ff.toFixed(0)}%</text>
+        <text x="40" y="50" textAnchor="middle" fill={ffs.col} fontSize="10" fontWeight="700" filter="url(#glow)">FF {ff.toFixed(0)}%</text>
       </g>
 
-      {/* Dialysate Bag */}
-      <g transform="translate(220, -8)">
-        <rect x="0" y="0" width="32" height="28" rx="4" fill="url(#bgDia)" stroke="#44ff88" strokeWidth="2"/>
-        <rect x="4" y="4" width="24" height="16" rx="2" fill="#00ff66" opacity="0.5"/>
-        <text x="16" y="20" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="700">{set.dialysate}</text>
-        <line x1="16" y1="28" x2="16" y2="30" stroke="#44ff88" strokeWidth="2"/>
+      {/* Dialysate Bag - on top of filter */}
+      <g transform="translate(190, -5)">
+        <rect x="0" y="0" width="36" height="30" rx="4" fill="url(#bgDia)" stroke="#44ff88" strokeWidth="2"/>
+        <rect x="4" y="4" width="28" height="18" rx="2" fill="#00ff66" opacity="0.5"/>
+        <text x="18" y="16" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="700">{set.dialysate}</text>
+        <line x1="18" y1="30" x2="18" y2="35" stroke="#44ff88" strokeWidth="2"/>
       </g>
 
-      {/* Return line */}
-      <path d="M 270 52 L 340 52" fill="none" stroke="#ff2222" strokeWidth="6" strokeLinecap="round"/>
+      {/* Line from filter to replacement */}
+      <path d="M 255 52 L 320 52" fill="none" stroke="#ff2222" strokeWidth="6" strokeLinecap="round"/>
 
-      {/* Replacement Bag */}
-      <g transform="translate(305, 2)">
-        <rect x="0" y="0" width="32" height={bagHeight} rx="4" fill="url(#bgRep)" stroke="#ff88aa" strokeWidth="2"/>
-        <rect x="4" y="4" width="24" height={bagHeight - 12} rx="2" fill="#ff6699" opacity="0.5"/>
-        <text x="16" y={bagHeight + 10} textAnchor="middle" fill="#ffaacc" fontSize="8" fontWeight="700">Rep</text>
-        <text x="16" y={bagHeight + 18} textAnchor="middle" fill="#ffccdd" fontSize="7">{set.replacement}</text>
-        <line x1="16" y1={bagHeight} x2="16" y2="52" stroke="#ff88aa" strokeWidth="2" strokeDasharray="3,2"/>
+      {/* Replacement Bag - Post-filter */}
+      <g transform="translate(320, 2)">
+        <rect x="0" y="0" width="36" height={bagHeight} rx="4" fill="url(#bgRep)" stroke="#ff88aa" strokeWidth="2"/>
+        <rect x="4" y="4" width="28" height={bagHeight - 12} rx="2" fill="#ff6699" opacity="0.5"/>
+        <text x="18" y="14" textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="600">Post</text>
+        <text x="18" y="24" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="700">{set.replacement}</text>
+        <line x1="18" y1={bagHeight} x2="18" y2="52" stroke="#ff88aa" strokeWidth="2" strokeDasharray="3,2"/>
       </g>
 
       {/* Return to patient */}
       <path d="M 360 52 L 410 52 L 410 100 L 50 100" fill="none" stroke="#ff2222" strokeWidth="6" strokeLinecap="round"/>
 
-      {/* Effluent line and bag */}
-      <path d="M 235 85 L 235 110 L 280 110" fill="none" stroke="#ddaa00" strokeWidth="4"/>
-      <g transform="translate(280, 95)">
-        <rect x="0" y="0" width="50" height="32" rx="4" fill="url(#bgEff)" stroke="#ffcc00" strokeWidth="2"/>
-        <text x="25" y="14" textAnchor="middle" fill="#ffffff" fontSize="8" fontWeight="600">Effluent</text>
-        <text x="25" y="26" textAnchor="middle" fill="#ffff88" fontSize="10" fontWeight="700">{set.dialysate + set.replacement + set.pfr + set.netUF}</text>
+      {/* UF Rate (effluent) line and bag */}
+      <path d="M 210 75 L 210 105 L 260 105" fill="none" stroke="#ddaa00" strokeWidth="4"/>
+      <g transform="translate(260, 90)">
+        <rect x="0" y="0" width="55" height="35" rx="4" fill="url(#bgEff)" stroke="#ffcc00" strokeWidth="2"/>
+        <text x="27" y="14" textAnchor="middle" fill="#ffffff" fontSize="8" fontWeight="600">UF Rate</text>
+        <text x="27" y="28" textAnchor="middle" fill="#ffff88" fontSize="11" fontWeight="700">{set.dialysate + set.replacement + set.netUF}</text>
       </g>
 
       {/* Animated blood particles */}
       {run && [0,1,2,3].map(i => (
         <circle key={i} r="4" fill="#ff0000" filter="url(#glow)">
-          <animateMotion dur={`${3.5/sp}s`} repeatCount="indefinite" begin={`${i*0.9/sp}s`} path="M 50 65 L 75 65 L 75 52 L 270 52 L 340 52 L 410 52 L 410 100 L 50 100"/>
+          <animateMotion dur={`${3.5/sp}s`} repeatCount="indefinite" begin={`${i*0.9/sp}s`} path="M 50 65 L 75 65 L 75 52 L 255 52 L 320 52 L 410 52 L 410 100 L 50 100"/>
         </circle>
       ))}
 
       {/* Pressure displays at bottom */}
-      <g transform="translate(60, 112)">
+      <g transform="translate(55, 112)">
         <rect x="-25" y="0" width="50" height="18" rx="3" fill="#200000" stroke="#ff6666" strokeWidth="1"/>
         <text x="0" y="8" textAnchor="middle" fill="#ff8888" fontSize="6">ACCESS</text>
         <text x="0" y="16" textAnchor="middle" fill="#ff4444" fontSize="9" fontWeight="700">{Math.round(pr.access)}</text>
       </g>
-      <g transform="translate(175, 112)">
+      <g transform="translate(145, 112)">
         <rect x="-25" y="0" width="50" height="18" rx="3" fill="#201500" stroke="#ffaa44" strokeWidth="1"/>
         <text x="0" y="8" textAnchor="middle" fill="#ffcc88" fontSize="6">TMP</text>
         <text x="0" y="16" textAnchor="middle" fill="#ffaa00" fontSize="9" fontWeight="700">{Math.round(pr.tmp)}</text>
       </g>
-      <g transform="translate(380, 112)">
+      <g transform="translate(235, 112)">
+        <rect x="-25" y="0" width="50" height="18" rx="3" fill="#151500" stroke="#aaaa44" strokeWidth="1"/>
+        <text x="0" y="8" textAnchor="middle" fill="#cccc88" fontSize="6">ΔP</text>
+        <text x="0" y="16" textAnchor="middle" fill="#aaaa00" fontSize="9" fontWeight="700">{Math.round(pr.deltaP)}</text>
+      </g>
+      <g transform="translate(395, 112)">
         <rect x="-25" y="0" width="50" height="18" rx="3" fill="#002000" stroke="#66ff66" strokeWidth="1"/>
         <text x="0" y="8" textAnchor="middle" fill="#88ff88" fontSize="6">RETURN</text>
         <text x="0" y="16" textAnchor="middle" fill="#44ff44" fontSize="9" fontWeight="700">{Math.round(pr.return)}</text>
@@ -419,10 +429,9 @@ const FCModal = ({ onClose }) => {
 
 // Main App
 export default function CRRTSimulator() {
-  const [set, setSet] = useState({ pbp: 2000, bfr: 250, pfr: 0, dialysate: 1500, replacement: 500, netUF: 100, run: true });
-  const [pt, setPt] = useState({ wt: 80, k: 5.5, na: 140, bun: 80, cr: 5.0, ca: 1.15, hct: 35, lf: 0.9 });
+  const [set, setSet] = useState({ pbp: 2000, bfr: 250, dialysate: 1500, replacement: 500, netUF: 100, run: false });
+  const [pt, setPt] = useState({ wt: 80, hct: 35 });
   const [fs, setFs] = useState({ age: 0, clot: 0 });
-  const [pr, setPr] = useState({ access: -80, return: 70, tmp: 120, deltaP: 45 });
   const [curSc, setCurSc] = useState(null);
   const [time, setTime] = useState(0);
   const [spd, setSpd] = useState(1);
@@ -433,19 +442,17 @@ export default function CRRTSimulator() {
     setSet(p => ({ ...p, [k]: v }));
   };
   
-  const eff = set.dialysate + set.replacement + set.pfr + set.netUF;
-  const ff = Phys.filtrationFraction(set.bfr, pt.hct, set.pfr, eff);
-
-  // Immediate pressure response to settings
-  useEffect(() => {
-    const ac = set.pbp > 1500 ? 0.8 : 0.6;
-    setPr(p => ({
-      access: Phys.calcAccess(set.bfr),
-      return: Phys.calcReturn(set.bfr, fs.clot),
-      tmp: Math.min(450, Phys.calcTMP(80, fs.age, set.bfr, pt.hct, ac, set.pfr, ff, eff)),
-      deltaP: Phys.calcDeltaP(set.bfr, fs.clot, pt.hct)
-    }));
-  }, [set.bfr, set.pbp, set.pfr, set.dialysate, set.replacement, set.netUF, pt.hct, fs.age, fs.clot, ff, eff]);
+  // Calculate all derived values directly - NO useEffect needed for immediate response
+  const eff = set.dialysate + set.replacement + set.netUF;
+  const ff = Phys.filtrationFraction(set.bfr, pt.hct, 0, eff);  // No PFR, so pass 0
+  
+  // Pressures calculated directly from current state - updates immediately
+  const pr = {
+    access: Phys.calcAccess(set.bfr),
+    return: Phys.calcReturn(set.bfr, fs.clot),
+    tmp: Phys.calcTMP(set.bfr, pt.hct, ff, eff, fs.age, fs.clot),
+    deltaP: Phys.calcDeltaP(set.bfr, fs.clot, pt.hct)
+  };
 
   const loadSc = (k) => {
     const s = scenarios[k];
@@ -455,30 +462,20 @@ export default function CRRTSimulator() {
     setTime(0);
   };
 
+  // Simulation timer - only updates filter age and clotting over time
   useEffect(() => {
     if (!set.run) return;
     const iv = setInterval(() => {
       setTime(t => t + spd);
       setFs(f => {
-        const na = f.age + spd / 3600;
-        const ac = set.pbp > 1500 ? 0.8 : 0.6;
-        const fff = ff > 25 ? 1 + (ff - 25) * 0.05 : 1;
-        const cr = 0.0002 * (1 - ac) * (pt.hct / 35) * fff;
-        return { age: na, clot: Math.min(1, f.clot + cr * spd) };
-      });
-      setPr(p => {
-        const ac = set.pbp > 1500 ? 0.8 : 0.6;
-        const currentEff = set.dialysate + set.replacement + set.pfr + set.netUF;
-        return { 
-          access: Phys.calcAccess(set.bfr), 
-          return: Phys.calcReturn(set.bfr, fs.clot), 
-          tmp: Math.min(450, Phys.calcTMP(80, fs.age, set.bfr, pt.hct, ac, set.pfr, ff, currentEff)), 
-          deltaP: Phys.calcDeltaP(set.bfr, fs.clot, pt.hct) 
-        };
+        const newAge = f.age + spd / 3600;
+        const ffFactor = ff > 25 ? 1 + (ff - 25) * 0.05 : 1;
+        const clotRate = 0.0001 * (pt.hct / 35) * ffFactor;
+        return { age: newAge, clot: Math.min(1, f.clot + clotRate * spd) };
       });
     }, 1000);
     return () => clearInterval(iv);
-  }, [set, spd, fs, pt, ff]);
+  }, [set.run, spd, pt.hct, ff]);
 
   const fmt = s => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 
@@ -514,11 +511,10 @@ export default function CRRTSimulator() {
           <div style={{ height: '145px', border: '1px solid #2a4a6a', borderRadius: '6px', overflow: 'hidden' }}>
             <Circuit set={set} pr={pr} fs={fs} run={set.run} ff={ff} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px', background: '#0f1a25', borderRadius: '5px', padding: '6px', border: '1px solid #2a4a5a' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', background: '#0f1a25', borderRadius: '5px', padding: '6px', border: '1px solid #2a4a5a' }}>
             {[
               ['PBP', 'pbp', '#44bbff', 'mL/h', 10, 0, 3000],
               ['BFR', 'bfr', '#ff7777', 'mL/min', 1, 50, 450],
-              ['PFR', 'pfr', '#ffdd44', 'mL/h', 10, 0, 2000],
               ['Dial', 'dialysate', '#77ff77', 'mL/h', 10, 0, 4000],
               ['Rep', 'replacement', '#ff88bb', 'mL/h', 10, 0, 3000],
               ['UF', 'netUF', '#66ffff', 'mL/h', 1, 0, 500]
@@ -547,7 +543,7 @@ export default function CRRTSimulator() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <FFPanel bfr={set.bfr} hct={pt.hct} pfr={set.pfr} eff={eff} />
+          <FFPanel bfr={set.bfr} hct={pt.hct} eff={eff} />
           <TeachPanel sc={curSc ? scenarios[curSc] : null} set={set} ff={ff} />
         </div>
       </div>
