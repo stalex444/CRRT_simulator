@@ -177,139 +177,207 @@ const FFPanel = ({ bfr, hct, eff }) => {
         <span style={{ fontSize: '9px', padding: '2px 8px', background: `${s.col}33`, border: `1px solid ${s.col}`, borderRadius: '10px', color: s.col, fontWeight: '700' }}>{s.st}</span>
       </div>
       <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-        <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto' }}>
+        <div style={{ position: 'relative', width: '70px', height: '70px', margin: '0 auto' }}>
           <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
             <circle cx="50" cy="50" r="40" fill="none" stroke="#1a2a3a" strokeWidth="8"/>
             <circle cx="50" cy="50" r="40" fill="none" stroke={s.col} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${Math.min(ff, 50) * 5} 251`} strokeDashoffset="63" style={{ transition: 'all 0.5s' }}/>
           </svg>
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: s.col, fontFamily: 'monospace' }}>{ff.toFixed(1)}%</div>
+            <div style={{ fontSize: '18px', fontWeight: '700', color: s.col, fontFamily: 'monospace' }}>{ff.toFixed(1)}%</div>
           </div>
         </div>
-        <div style={{ fontSize: '9px', color: s.col, fontWeight: '600' }}>{s.msg}</div>
-        <div style={{ fontSize: '8px', color: '#99aabb' }}>Est. filter life: {s.life}</div>
+        <div style={{ fontSize: '8px', color: s.col, fontWeight: '600' }}>{s.msg}</div>
       </div>
-      <div style={{ fontSize: '8px', background: '#0a1218', borderRadius: '4px', padding: '6px', border: '1px solid #2a3a4a' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}><span style={{ color: '#99aabb' }}>Plasma flow:</span><span style={{ color: '#88ddff', fontFamily: 'monospace', fontWeight: '600' }}>{pf.toFixed(0)} mL/min</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #3a4a5a', paddingTop: '3px', marginTop: '2px' }}><span style={{ color: '#99aabb' }}>UF Rate:</span><span style={{ color: '#ffdd66', fontFamily: 'monospace', fontWeight: '600' }}>{(eff/60).toFixed(1)} mL/min</span></div>
+      <div style={{ fontSize: '8px', background: '#0a1218', borderRadius: '4px', padding: '5px', border: '1px solid #2a3a4a' }}>
+        <div style={{ color: '#aabbcc', marginBottom: '3px', fontWeight: '600' }}>Equation:</div>
+        <div style={{ color: '#88ddff', fontFamily: 'monospace', fontSize: '7px', lineHeight: '1.4' }}>
+          FF = (UF Rate ÷ 60) ÷ Plasma Flow × 100<br/>
+          FF = ({eff} ÷ 60) ÷ {pf.toFixed(1)} × 100<br/>
+          <span style={{ color: s.col, fontWeight: '700' }}>FF = {ff.toFixed(1)}%</span>
+        </div>
       </div>
     </div>
   );
 };
 
-const Circuit = ({ set, pr, fs, run, ff }) => {
+const CalculationsPanel = ({ set, pt, ff }) => {
+  const eff = set.dialysate + set.replacement + set.netUF;
+  const plasmaFlow = set.bfr * (1 - pt.hct / 100);
+  
+  // Effluent dose in mL/kg/hr
+  const effDose = pt.wt > 0 ? eff / pt.wt : 0;
+  
+  // Clearance approximation (for small solutes like urea)
+  // In CVVHDF: Clearance ≈ Dialysate flow + Ultrafiltration (convection)
+  const clearance = (set.dialysate + set.replacement + set.netUF) / 60; // mL/min
+  
+  // Post-filter hematocrit
+  // RBC volume stays constant, but plasma is removed
+  const rbcFlow = set.bfr * (pt.hct / 100);
+  const postFilterFlow = set.bfr - (eff / 60);
+  const postFilterHct = postFilterFlow > 0 ? Math.min(70, (rbcFlow / postFilterFlow) * 100) : 70;
+  
+  return (
+    <div style={{ background: '#0f1520', border: '1px solid #3a5a7a', borderRadius: '6px', padding: '8px' }}>
+      <div style={{ fontSize: '11px', fontWeight: '700', color: '#ffcc66', marginBottom: '8px' }}>📊 Calculations</div>
+      
+      {/* Effluent Dose */}
+      <div style={{ background: '#0a1218', borderRadius: '4px', padding: '6px', marginBottom: '6px', border: '1px solid #2a4a5a' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+          <span style={{ fontSize: '9px', color: '#99aabb' }}>Effluent Dose:</span>
+          <span style={{ fontSize: '14px', color: effDose >= 20 && effDose <= 25 ? '#00ff88' : effDose < 20 ? '#ffcc00' : '#ff8844', fontWeight: '700', fontFamily: 'monospace' }}>{effDose.toFixed(1)} <span style={{ fontSize: '9px' }}>mL/kg/hr</span></span>
+        </div>
+        <div style={{ fontSize: '7px', color: '#6688aa', fontFamily: 'monospace' }}>
+          = ({set.dialysate} + {set.replacement} + {set.netUF}) ÷ {pt.wt} kg
+        </div>
+        <div style={{ fontSize: '7px', color: '#88aacc', marginTop: '2px' }}>Target: 20-25 mL/kg/hr (KDIGO)</div>
+      </div>
+      
+      {/* Clearance */}
+      <div style={{ background: '#0a1218', borderRadius: '4px', padding: '6px', marginBottom: '6px', border: '1px solid #2a4a5a' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+          <span style={{ fontSize: '9px', color: '#99aabb' }}>Clearance (Urea):</span>
+          <span style={{ fontSize: '14px', color: '#88ddff', fontWeight: '700', fontFamily: 'monospace' }}>{clearance.toFixed(1)} <span style={{ fontSize: '9px' }}>mL/min</span></span>
+        </div>
+        <div style={{ fontSize: '7px', color: '#6688aa', fontFamily: 'monospace' }}>
+          = (Dial + Post + UF) ÷ 60<br/>
+          = ({set.dialysate} + {set.replacement} + {set.netUF}) ÷ 60
+        </div>
+      </div>
+      
+      {/* Post-filter Hematocrit */}
+      <div style={{ background: '#0a1218', borderRadius: '4px', padding: '6px', border: '1px solid #2a4a5a' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
+          <span style={{ fontSize: '9px', color: '#99aabb' }}>Post-Filter Hct:</span>
+          <span style={{ fontSize: '14px', color: postFilterHct > 50 ? '#ff4444' : postFilterHct > 45 ? '#ffcc00' : '#88ff88', fontWeight: '700', fontFamily: 'monospace' }}>{postFilterHct.toFixed(1)}%</span>
+        </div>
+        <div style={{ fontSize: '7px', color: '#6688aa', fontFamily: 'monospace' }}>
+          = (BFR × Hct) ÷ (BFR - UF/60)<br/>
+          = ({set.bfr} × {pt.hct}%) ÷ ({set.bfr} - {(eff/60).toFixed(1)})<br/>
+          = {rbcFlow.toFixed(1)} ÷ {postFilterFlow.toFixed(1)}
+        </div>
+        <div style={{ fontSize: '7px', color: postFilterHct > 50 ? '#ff8888' : '#88aacc', marginTop: '2px' }}>
+          {postFilterHct > 50 ? '⚠️ High! Risk of clotting' : postFilterHct > 45 ? '⚠️ Elevated' : '✓ Normal range'}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Circuit = ({ set, pr, fs, run, ff, pt }) => {
   const ffs = getFFStatus(ff);
   const sp = set.bfr / 250;
-  const bagHeight = 38;
   return (
-    <svg viewBox="0 0 520 135" style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #001428 0%, #001a30 100%)', borderRadius: '6px' }}>
+    <svg viewBox="0 0 520 180" style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #001428 0%, #001a30 100%)', borderRadius: '6px' }}>
       <defs>
-        <linearGradient id="bgPBP" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#0066cc"/><stop offset="100%" stopColor="#003366"/></linearGradient>
+        <linearGradient id="bgPre" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#0066cc"/><stop offset="100%" stopColor="#003366"/></linearGradient>
         <linearGradient id="bgDia" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#00cc44"/><stop offset="100%" stopColor="#006622"/></linearGradient>
         <linearGradient id="bgRep" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#cc4488"/><stop offset="100%" stopColor="#662244"/></linearGradient>
-        <linearGradient id="bgEff" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#ccaa00"/><stop offset="100%" stopColor="#554400"/></linearGradient>
+        <linearGradient id="bgUF" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#ccaa00"/><stop offset="100%" stopColor="#554400"/></linearGradient>
         <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
       
       {/* Patient icon */}
-      <ellipse cx="28" cy="42" rx="15" ry="18" fill="#2a4a6a" stroke="#4a8aff" strokeWidth="2"/>
-      <ellipse cx="28" cy="80" rx="19" ry="24" fill="#2a4a6a" stroke="#4a8aff" strokeWidth="2"/>
-      <text x="28" y="84" textAnchor="middle" fill="#88ccff" fontSize="7" fontWeight="600">PATIENT</text>
+      <ellipse cx="30" cy="55" rx="18" ry="22" fill="#2a4a6a" stroke="#4a8aff" strokeWidth="2"/>
+      <ellipse cx="30" cy="105" rx="22" ry="28" fill="#2a4a6a" stroke="#4a8aff" strokeWidth="2"/>
+      <text x="30" y="110" textAnchor="middle" fill="#88ccff" fontSize="9" fontWeight="600">PATIENT</text>
 
       {/* Access line - dark red */}
-      <path d="M 50 65 L 75 65 L 75 52 L 95 52" fill="none" stroke="#990000" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M 55 80 L 85 80 L 85 65 L 105 65" fill="none" stroke="#990000" strokeWidth="7" strokeLinecap="round"/>
       
       {/* Blood pump */}
-      <g transform="translate(95, 32)">
-        <circle cx="18" cy="18" r="18" fill="#cc0000" stroke="#ff4444" strokeWidth="2" filter="url(#glow)"/>
-        <circle cx="18" cy="18" r="12" fill="none" stroke="#220000" strokeWidth="3"/>
-        <g style={{ transformOrigin: '18px 18px', animation: run ? `spin ${2.5/sp}s linear infinite` : 'none' }}>
-          <rect x="14" y="2" width="8" height="12" rx="2" fill="#440000"/>
-          <rect x="14" y="22" width="8" height="12" rx="2" fill="#440000"/>
+      <g transform="translate(105, 42)">
+        <circle cx="22" cy="22" r="22" fill="#cc0000" stroke="#ff4444" strokeWidth="2" filter="url(#glow)"/>
+        <circle cx="22" cy="22" r="15" fill="none" stroke="#220000" strokeWidth="3"/>
+        <g style={{ transformOrigin: '22px 22px', animation: run ? `spin ${2.5/sp}s linear infinite` : 'none' }}>
+          <rect x="17" y="2" width="10" height="14" rx="2" fill="#440000"/>
+          <rect x="17" y="28" width="10" height="14" rx="2" fill="#440000"/>
         </g>
       </g>
-      <text x="113" y="70" textAnchor="middle" fill="#ff6666" fontSize="9" fontWeight="700">{set.bfr}</text>
-      <text x="113" y="78" textAnchor="middle" fill="#ff9999" fontSize="6">mL/min</text>
+      <text x="127" y="90" textAnchor="middle" fill="#ff6666" fontSize="11" fontWeight="700">{set.bfr}</text>
+      <text x="127" y="100" textAnchor="middle" fill="#ff9999" fontSize="8">mL/min</text>
 
-      {/* PBP Bag */}
-      <g transform="translate(70, 2)">
-        <rect x="0" y="0" width="32" height={bagHeight} rx="4" fill="url(#bgPBP)" stroke="#44aaff" strokeWidth="2"/>
-        <rect x="4" y="4" width="24" height={bagHeight - 12} rx="2" fill="#0088ff" opacity="0.5"/>
-        <text x="16" y={bagHeight + 10} textAnchor="middle" fill="#66ccff" fontSize="8" fontWeight="700">PBP</text>
-        <line x1="16" y1={bagHeight} x2="16" y2={bagHeight + 2} stroke="#44aaff" strokeWidth="2"/>
+      {/* Pre (PBP) Bag */}
+      <g transform="translate(75, 5)">
+        <rect x="0" y="0" width="38" height="42" rx="4" fill="url(#bgPre)" stroke="#44aaff" strokeWidth="2"/>
+        <rect x="4" y="4" width="30" height="28" rx="2" fill="#0088ff" opacity="0.5"/>
+        <text x="19" y="20" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="700">{set.pbp}</text>
+        <text x="19" y="54" textAnchor="middle" fill="#66ccff" fontSize="9" fontWeight="700">Pre</text>
+        <line x1="19" y1="42" x2="19" y2="48" stroke="#44aaff" strokeWidth="2"/>
       </g>
 
       {/* Line to filter */}
-      <path d="M 135 52 L 170 52" fill="none" stroke="#aa0000" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M 152 65 L 185 65" fill="none" stroke="#aa0000" strokeWidth="7" strokeLinecap="round"/>
 
-      {/* FILTER - HORIZONTAL like real PrisMax */}
-      <g transform="translate(170, 32)">
-        <rect x="0" y="0" width="80" height="40" rx="5" fill="#0a1a2a" stroke={ffs.col} strokeWidth="3"/>
-        <rect x="5" y="5" width="70" height="30" rx="3" fill="#051525"/>
-        {[0,1,2,3,4,5,6].map(i => (
-          <line key={i} x1={12 + i*10} y1="8" x2={12 + i*10} y2="32" stroke="#ff8800" strokeWidth="3" opacity={Math.max(0.2, 1 - fs.clot * 0.8)} strokeLinecap="round"/>
-        ))}
-        <text x="40" y="50" textAnchor="middle" fill={ffs.col} fontSize="10" fontWeight="700" filter="url(#glow)">FF {ff.toFixed(0)}%</text>
+      {/* UF Rate Bag - at START of filter (left side) */}
+      <g transform="translate(175, 110)">
+        <rect x="0" y="0" width="55" height="42" rx="4" fill="url(#bgUF)" stroke="#ffcc00" strokeWidth="2"/>
+        <text x="27" y="16" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="600">UF Rate</text>
+        <text x="27" y="34" textAnchor="middle" fill="#ffff88" fontSize="14" fontWeight="700">{set.netUF}</text>
+        <line x1="27" y1="0" x2="27" y2="-8" stroke="#ffcc00" strokeWidth="2"/>
       </g>
 
-      {/* Dialysate Bag - on top of filter */}
-      <g transform="translate(190, -5)">
-        <rect x="0" y="0" width="36" height="30" rx="4" fill="url(#bgDia)" stroke="#44ff88" strokeWidth="2"/>
-        <rect x="4" y="4" width="28" height="18" rx="2" fill="#00ff66" opacity="0.5"/>
-        <text x="18" y="16" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="700">{set.dialysate}</text>
-        <line x1="18" y1="30" x2="18" y2="35" stroke="#44ff88" strokeWidth="2"/>
+      {/* FILTER - HORIZONTAL - larger */}
+      <g transform="translate(185, 40)">
+        <rect x="0" y="0" width="110" height="50" rx="6" fill="#0a1a2a" stroke={ffs.col} strokeWidth="3"/>
+        <rect x="5" y="5" width="100" height="40" rx="4" fill="#051525"/>
+        {[0,1,2,3,4,5,6,7,8].map(i => (
+          <line key={i} x1={12 + i*11} y1="10" x2={12 + i*11} y2="40" stroke="#ff8800" strokeWidth="3" opacity={Math.max(0.2, 1 - fs.clot * 0.8)} strokeLinecap="round"/>
+        ))}
+        <text x="55" y="62" textAnchor="middle" fill={ffs.col} fontSize="12" fontWeight="700" filter="url(#glow)">FF {ff.toFixed(0)}%</text>
+      </g>
+
+      {/* Dialysate Bag - at END of filter (right side, on top) */}
+      <g transform="translate(260, 0)">
+        <rect x="0" y="0" width="42" height="38" rx="4" fill="url(#bgDia)" stroke="#44ff88" strokeWidth="2"/>
+        <rect x="4" y="4" width="34" height="24" rx="2" fill="#00ff66" opacity="0.5"/>
+        <text x="21" y="22" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="700">{set.dialysate}</text>
+        <text x="21" y="50" textAnchor="middle" fill="#66ff99" fontSize="9" fontWeight="700">Dial</text>
+        <line x1="21" y1="38" x2="21" y2="42" stroke="#44ff88" strokeWidth="2"/>
       </g>
 
       {/* Line from filter to replacement */}
-      <path d="M 255 52 L 320 52" fill="none" stroke="#ff2222" strokeWidth="6" strokeLinecap="round"/>
+      <path d="M 300 65 L 350 65" fill="none" stroke="#ff2222" strokeWidth="7" strokeLinecap="round"/>
 
       {/* Replacement Bag - Post-filter */}
-      <g transform="translate(320, 2)">
-        <rect x="0" y="0" width="36" height={bagHeight} rx="4" fill="url(#bgRep)" stroke="#ff88aa" strokeWidth="2"/>
-        <rect x="4" y="4" width="28" height={bagHeight - 12} rx="2" fill="#ff6699" opacity="0.5"/>
-        <text x="18" y="14" textAnchor="middle" fill="#ffffff" fontSize="7" fontWeight="600">Post</text>
-        <text x="18" y="24" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="700">{set.replacement}</text>
-        <line x1="18" y1={bagHeight} x2="18" y2="52" stroke="#ff88aa" strokeWidth="2" strokeDasharray="3,2"/>
+      <g transform="translate(350, 10)">
+        <rect x="0" y="0" width="42" height="48" rx="4" fill="url(#bgRep)" stroke="#ff88aa" strokeWidth="2"/>
+        <rect x="4" y="4" width="34" height="32" rx="2" fill="#ff6699" opacity="0.5"/>
+        <text x="21" y="18" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="600">Post</text>
+        <text x="21" y="32" textAnchor="middle" fill="#ffffff" fontSize="11" fontWeight="700">{set.replacement}</text>
+        <line x1="21" y1="48" x2="21" y2="58" stroke="#ff88aa" strokeWidth="2" strokeDasharray="3,2"/>
       </g>
 
       {/* Return to patient */}
-      <path d="M 360 52 L 410 52 L 410 100 L 50 100" fill="none" stroke="#ff2222" strokeWidth="6" strokeLinecap="round"/>
-
-      {/* UF Rate (effluent) line and bag */}
-      <path d="M 210 75 L 210 105 L 260 105" fill="none" stroke="#ddaa00" strokeWidth="4"/>
-      <g transform="translate(260, 90)">
-        <rect x="0" y="0" width="55" height="35" rx="4" fill="url(#bgEff)" stroke="#ffcc00" strokeWidth="2"/>
-        <text x="27" y="14" textAnchor="middle" fill="#ffffff" fontSize="8" fontWeight="600">UF Rate</text>
-        <text x="27" y="28" textAnchor="middle" fill="#ffff88" fontSize="11" fontWeight="700">{set.dialysate + set.replacement + set.netUF}</text>
-      </g>
+      <path d="M 395 65 L 440 65 L 440 140 L 55 140" fill="none" stroke="#ff2222" strokeWidth="7" strokeLinecap="round"/>
 
       {/* Animated blood particles */}
       {run && [0,1,2,3].map(i => (
-        <circle key={i} r="4" fill="#ff0000" filter="url(#glow)">
-          <animateMotion dur={`${3.5/sp}s`} repeatCount="indefinite" begin={`${i*0.9/sp}s`} path="M 50 65 L 75 65 L 75 52 L 255 52 L 320 52 L 410 52 L 410 100 L 50 100"/>
+        <circle key={i} r="5" fill="#ff0000" filter="url(#glow)">
+          <animateMotion dur={`${3.5/sp}s`} repeatCount="indefinite" begin={`${i*0.9/sp}s`} path="M 55 80 L 85 80 L 85 65 L 300 65 L 395 65 L 440 65 L 440 140 L 55 140"/>
         </circle>
       ))}
 
       {/* Pressure displays at bottom */}
-      <g transform="translate(55, 112)">
-        <rect x="-25" y="0" width="50" height="18" rx="3" fill="#200000" stroke="#ff6666" strokeWidth="1"/>
-        <text x="0" y="8" textAnchor="middle" fill="#ff8888" fontSize="6">ACCESS</text>
-        <text x="0" y="16" textAnchor="middle" fill="#ff4444" fontSize="9" fontWeight="700">{Math.round(pr.access)}</text>
+      <g transform="translate(70, 158)">
+        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#200000" stroke="#ff6666" strokeWidth="1"/>
+        <text x="0" y="9" textAnchor="middle" fill="#ff8888" fontSize="7">ACCESS</text>
+        <text x="0" y="18" textAnchor="middle" fill="#ff4444" fontSize="10" fontWeight="700">{Math.round(pr.access)}</text>
       </g>
-      <g transform="translate(145, 112)">
-        <rect x="-25" y="0" width="50" height="18" rx="3" fill="#201500" stroke="#ffaa44" strokeWidth="1"/>
-        <text x="0" y="8" textAnchor="middle" fill="#ffcc88" fontSize="6">TMP</text>
-        <text x="0" y="16" textAnchor="middle" fill="#ffaa00" fontSize="9" fontWeight="700">{Math.round(pr.tmp)}</text>
+      <g transform="translate(170, 158)">
+        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#201500" stroke="#ffaa44" strokeWidth="1"/>
+        <text x="0" y="9" textAnchor="middle" fill="#ffcc88" fontSize="7">TMP</text>
+        <text x="0" y="18" textAnchor="middle" fill="#ffaa00" fontSize="10" fontWeight="700">{Math.round(pr.tmp)}</text>
       </g>
-      <g transform="translate(235, 112)">
-        <rect x="-25" y="0" width="50" height="18" rx="3" fill="#151500" stroke="#aaaa44" strokeWidth="1"/>
-        <text x="0" y="8" textAnchor="middle" fill="#cccc88" fontSize="6">ΔP</text>
-        <text x="0" y="16" textAnchor="middle" fill="#aaaa00" fontSize="9" fontWeight="700">{Math.round(pr.deltaP)}</text>
+      <g transform="translate(270, 158)">
+        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#151500" stroke="#aaaa44" strokeWidth="1"/>
+        <text x="0" y="9" textAnchor="middle" fill="#cccc88" fontSize="7">ΔP</text>
+        <text x="0" y="18" textAnchor="middle" fill="#aaaa00" fontSize="10" fontWeight="700">{Math.round(pr.deltaP)}</text>
       </g>
-      <g transform="translate(395, 112)">
-        <rect x="-25" y="0" width="50" height="18" rx="3" fill="#002000" stroke="#66ff66" strokeWidth="1"/>
-        <text x="0" y="8" textAnchor="middle" fill="#88ff88" fontSize="6">RETURN</text>
-        <text x="0" y="16" textAnchor="middle" fill="#44ff44" fontSize="9" fontWeight="700">{Math.round(pr.return)}</text>
+      <g transform="translate(420, 158)">
+        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#002000" stroke="#66ff66" strokeWidth="1"/>
+        <text x="0" y="9" textAnchor="middle" fill="#88ff88" fontSize="7">RETURN</text>
+        <text x="0" y="18" textAnchor="middle" fill="#44ff44" fontSize="10" fontWeight="700">{Math.round(pr.return)}</text>
       </g>
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
@@ -331,26 +399,26 @@ const ScenPanel = ({ sc, cur, onSel }) => (
 );
 
 const PatientInputs = ({ pt, setPt }) => (
-  <div style={{ background: '#0f1525', border: '1px solid #4a6a8a', borderRadius: '5px', padding: '8px' }}>
-    <div style={{ fontSize: '10px', fontWeight: '700', color: '#99ccff', marginBottom: '8px' }}>👤 Patient Settings</div>
-    <div style={{ marginBottom: '8px' }}>
-      <div style={{ fontSize: '9px', color: '#88aacc', marginBottom: '3px' }}>Weight (kg)</div>
+  <div style={{ background: '#0f1525', border: '1px solid #4a6a8a', borderRadius: '5px', padding: '10px' }}>
+    <div style={{ fontSize: '11px', fontWeight: '700', color: '#99ccff', marginBottom: '10px' }}>👤 Patient Settings</div>
+    <div style={{ marginBottom: '10px' }}>
+      <div style={{ fontSize: '10px', color: '#88aacc', marginBottom: '4px' }}>Weight (kg)</div>
       <input 
         type="number" 
         value={pt.wt} 
         onChange={e => setPt(p => ({...p, wt: Number(e.target.value)}))}
         min={30} max={200} step={1}
-        style={{ width: '100%', padding: '6px', background: '#0a1520', border: '2px solid #44aaff', borderRadius: '4px', color: '#44aaff', fontSize: '14px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
+        style={{ width: '100%', padding: '8px', background: '#0a1520', border: '2px solid #44aaff', borderRadius: '4px', color: '#44aaff', fontSize: '16px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
       />
     </div>
     <div>
-      <div style={{ fontSize: '9px', color: '#88aacc', marginBottom: '3px' }}>Hematocrit (%)</div>
+      <div style={{ fontSize: '10px', color: '#88aacc', marginBottom: '4px' }}>Hematocrit (%)</div>
       <input 
         type="number" 
         value={pt.hct} 
         onChange={e => setPt(p => ({...p, hct: Number(e.target.value)}))}
         min={15} max={55} step={1}
-        style={{ width: '100%', padding: '6px', background: '#0a1520', border: '2px solid #ff8888', borderRadius: '4px', color: '#ff8888', fontSize: '14px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
+        style={{ width: '100%', padding: '8px', background: '#0a1520', border: '2px solid #ff8888', borderRadius: '4px', color: '#ff8888', fontSize: '16px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
       />
     </div>
   </div>
@@ -501,26 +569,26 @@ export default function CRRTSimulator() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr 170px', gap: '6px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 200px', gap: '8px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <ScenPanel sc={scenarios} cur={curSc} onSel={loadSc} />
           <PatientInputs pt={pt} setPt={setPt} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div style={{ height: '145px', border: '1px solid #2a4a6a', borderRadius: '6px', overflow: 'hidden' }}>
-            <Circuit set={set} pr={pr} fs={fs} run={set.run} ff={ff} />
+          <div style={{ height: '195px', border: '1px solid #2a4a6a', borderRadius: '6px', overflow: 'hidden' }}>
+            <Circuit set={set} pr={pr} fs={fs} run={set.run} ff={ff} pt={pt} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', background: '#0f1a25', borderRadius: '5px', padding: '6px', border: '1px solid #2a4a5a' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', background: '#0f1a25', borderRadius: '5px', padding: '8px', border: '1px solid #2a4a5a' }}>
             {[
-              ['PBP', 'pbp', '#44bbff', 'mL/h', 10, 0, 3000],
+              ['Pre', 'pbp', '#44bbff', 'mL/h', 10, 0, 3000],
               ['BFR', 'bfr', '#ff7777', 'mL/min', 1, 50, 450],
               ['Dial', 'dialysate', '#77ff77', 'mL/h', 10, 0, 4000],
-              ['Rep', 'replacement', '#ff88bb', 'mL/h', 10, 0, 3000],
-              ['UF', 'netUF', '#66ffff', 'mL/h', 1, 0, 500]
+              ['Post', 'replacement', '#ff88bb', 'mL/h', 10, 0, 3000],
+              ['UF Rate', 'netUF', '#ffcc44', 'mL/h', 1, 0, 500]
             ].map(([l, k, c, unit, step, min, max]) => (
               <div key={k} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '8px', color: c, fontWeight: '600' }}>{l}</div>
+                <div style={{ fontSize: '10px', color: c, fontWeight: '700', marginBottom: '2px' }}>{l}</div>
                 <input 
                   type="number" 
                   value={set[k]} 
@@ -528,9 +596,9 @@ export default function CRRTSimulator() {
                   step={step}
                   min={min}
                   max={max}
-                  style={{ width: '50px', padding: '4px 2px', background: '#0a1520', border: `2px solid ${c}`, borderRadius: '4px', color: c, fontSize: '13px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }} 
+                  style={{ width: '65px', padding: '6px 4px', background: '#0a1520', border: `2px solid ${c}`, borderRadius: '4px', color: c, fontSize: '16px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }} 
                 />
-                <div style={{ fontSize: '7px', color: '#99aabb', marginTop: '1px' }}>{unit}</div>
+                <div style={{ fontSize: '9px', color: '#99aabb', marginTop: '2px' }}>{unit}</div>
               </div>
             ))}
           </div>
@@ -544,6 +612,7 @@ export default function CRRTSimulator() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <FFPanel bfr={set.bfr} hct={pt.hct} eff={eff} />
+          <CalculationsPanel set={set} pt={pt} ff={ff} />
           <TeachPanel sc={curSc ? scenarios[curSc] : null} set={set} ff={ff} />
         </div>
       </div>
