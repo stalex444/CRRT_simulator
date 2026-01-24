@@ -268,7 +268,7 @@ const Circuit = ({ set, pr, fs, run, ff, pt }) => {
   const ffs = getFFStatus(ff);
   const sp = set.bfr / 250;
   return (
-    <svg viewBox="0 0 520 180" style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #001428 0%, #001a30 100%)', borderRadius: '6px' }}>
+    <svg viewBox="0 0 520 185" style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg, #001428 0%, #001a30 100%)', borderRadius: '6px' }}>
       <defs>
         <linearGradient id="bgPre" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#0066cc"/><stop offset="100%" stopColor="#003366"/></linearGradient>
         <linearGradient id="bgDia" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#00cc44"/><stop offset="100%" stopColor="#006622"/></linearGradient>
@@ -309,13 +309,14 @@ const Circuit = ({ set, pr, fs, run, ff, pt }) => {
       {/* Line to filter */}
       <path d="M 152 65 L 185 65" fill="none" stroke="#aa0000" strokeWidth="7" strokeLinecap="round"/>
 
-      {/* UF Rate Bag - at START of filter (left side) */}
-      <g transform="translate(175, 110)">
-        <rect x="0" y="0" width="55" height="42" rx="4" fill="url(#bgUF)" stroke="#ffcc00" strokeWidth="2"/>
-        <text x="27" y="16" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="600">UF Rate</text>
-        <text x="27" y="34" textAnchor="middle" fill="#ffff88" fontSize="14" fontWeight="700">{set.netUF}</text>
-        <line x1="27" y1="0" x2="27" y2="-8" stroke="#ffcc00" strokeWidth="2"/>
+      {/* UF Rate Bag - below filter, to the right side */}
+      <g transform="translate(330, 90)">
+        <rect x="0" y="0" width="55" height="40" rx="4" fill="url(#bgUF)" stroke="#ffcc00" strokeWidth="2"/>
+        <text x="27" y="15" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="600">UF Rate</text>
+        <text x="27" y="32" textAnchor="middle" fill="#ffff88" fontSize="14" fontWeight="700">{set.netUF}</text>
       </g>
+      {/* Line from filter to UF bag */}
+      <path d="M 250 95 L 250 110 L 330 110" fill="none" stroke="#ddaa00" strokeWidth="4"/>
 
       {/* FILTER - HORIZONTAL - larger */}
       <g transform="translate(185, 40)">
@@ -349,35 +350,35 @@ const Circuit = ({ set, pr, fs, run, ff, pt }) => {
       </g>
 
       {/* Return to patient */}
-      <path d="M 395 65 L 440 65 L 440 140 L 55 140" fill="none" stroke="#ff2222" strokeWidth="7" strokeLinecap="round"/>
+      <path d="M 395 65 L 450 65 L 450 150 L 55 150" fill="none" stroke="#ff2222" strokeWidth="7" strokeLinecap="round"/>
 
       {/* Animated blood particles */}
       {run && [0,1,2,3].map(i => (
         <circle key={i} r="5" fill="#ff0000" filter="url(#glow)">
-          <animateMotion dur={`${3.5/sp}s`} repeatCount="indefinite" begin={`${i*0.9/sp}s`} path="M 55 80 L 85 80 L 85 65 L 300 65 L 395 65 L 440 65 L 440 140 L 55 140"/>
+          <animateMotion dur={`${3.5/sp}s`} repeatCount="indefinite" begin={`${i*0.9/sp}s`} path="M 55 80 L 85 80 L 85 65 L 300 65 L 395 65 L 450 65 L 450 150 L 55 150"/>
         </circle>
       ))}
 
       {/* Pressure displays at bottom */}
-      <g transform="translate(70, 158)">
-        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#200000" stroke="#ff6666" strokeWidth="1"/>
-        <text x="0" y="9" textAnchor="middle" fill="#ff8888" fontSize="7">ACCESS</text>
-        <text x="0" y="18" textAnchor="middle" fill="#ff4444" fontSize="10" fontWeight="700">{Math.round(pr.access)}</text>
+      <g transform="translate(70, 162)">
+        <rect x="-28" y="0" width="56" height="18" rx="3" fill="#200000" stroke="#ff6666" strokeWidth="1"/>
+        <text x="0" y="8" textAnchor="middle" fill="#ff8888" fontSize="7">ACCESS</text>
+        <text x="0" y="16" textAnchor="middle" fill="#ff4444" fontSize="9" fontWeight="700">{Math.round(pr.access)}</text>
       </g>
-      <g transform="translate(170, 158)">
-        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#201500" stroke="#ffaa44" strokeWidth="1"/>
-        <text x="0" y="9" textAnchor="middle" fill="#ffcc88" fontSize="7">TMP</text>
-        <text x="0" y="18" textAnchor="middle" fill="#ffaa00" fontSize="10" fontWeight="700">{Math.round(pr.tmp)}</text>
+      <g transform="translate(170, 162)">
+        <rect x="-28" y="0" width="56" height="18" rx="3" fill="#201500" stroke="#ffaa44" strokeWidth="1"/>
+        <text x="0" y="8" textAnchor="middle" fill="#ffcc88" fontSize="7">TMP</text>
+        <text x="0" y="16" textAnchor="middle" fill="#ffaa00" fontSize="9" fontWeight="700">{Math.round(pr.tmp)}</text>
       </g>
-      <g transform="translate(270, 158)">
-        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#151500" stroke="#aaaa44" strokeWidth="1"/>
-        <text x="0" y="9" textAnchor="middle" fill="#cccc88" fontSize="7">ΔP</text>
-        <text x="0" y="18" textAnchor="middle" fill="#aaaa00" fontSize="10" fontWeight="700">{Math.round(pr.deltaP)}</text>
+      <g transform="translate(270, 162)">
+        <rect x="-28" y="0" width="56" height="18" rx="3" fill="#151500" stroke="#aaaa44" strokeWidth="1"/>
+        <text x="0" y="8" textAnchor="middle" fill="#cccc88" fontSize="7">ΔP</text>
+        <text x="0" y="16" textAnchor="middle" fill="#aaaa00" fontSize="9" fontWeight="700">{Math.round(pr.deltaP)}</text>
       </g>
-      <g transform="translate(420, 158)">
-        <rect x="-28" y="0" width="56" height="20" rx="3" fill="#002000" stroke="#66ff66" strokeWidth="1"/>
-        <text x="0" y="9" textAnchor="middle" fill="#88ff88" fontSize="7">RETURN</text>
-        <text x="0" y="18" textAnchor="middle" fill="#44ff44" fontSize="10" fontWeight="700">{Math.round(pr.return)}</text>
+      <g transform="translate(450, 162)">
+        <rect x="-28" y="0" width="56" height="18" rx="3" fill="#002000" stroke="#66ff66" strokeWidth="1"/>
+        <text x="0" y="8" textAnchor="middle" fill="#88ff88" fontSize="7">RETURN</text>
+        <text x="0" y="16" textAnchor="middle" fill="#44ff44" fontSize="9" fontWeight="700">{Math.round(pr.return)}</text>
       </g>
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
@@ -576,7 +577,7 @@ export default function CRRTSimulator() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div style={{ height: '195px', border: '1px solid #2a4a6a', borderRadius: '6px', overflow: 'hidden' }}>
+          <div style={{ height: '210px', border: '1px solid #2a4a6a', borderRadius: '6px', overflow: 'hidden' }}>
             <Circuit set={set} pr={pr} fs={fs} run={set.run} ff={ff} pt={pt} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', background: '#0f1a25', borderRadius: '5px', padding: '8px', border: '1px solid #2a4a5a' }}>
