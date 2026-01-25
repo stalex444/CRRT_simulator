@@ -108,60 +108,54 @@ const Gauge = ({ label, value, min, max, inverted = false }) => {
   const range = max - min;
   const pct = Math.max(0, Math.min(100, ((value - min) / range) * 100));
   
-  // For Access (negative), low values are good. For others, middle is good.
-  // Access: -350 to 0, good is around -50 to -150
-  // Return: 0 to 400, good is around 50-200
-  // TMP: 0 to 500, good is around 50-250
-  // ΔP: 0 to 500, good is around 0-100
-  
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px', background: '#000814', borderRadius: '4px', border: '1px solid #0066aa', minWidth: '58px' }}>
-      <span style={{ fontSize: '10px', color: '#44aaff', fontWeight: '600', marginBottom: '4px' }}>{label}</span>
-      <div style={{ position: 'relative', width: '28px', height: '80px', background: '#001020', borderRadius: '3px', border: '1px solid #004488' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '6px', background: '#000814', borderRadius: '5px', border: '1px solid #0066aa', minWidth: '70px' }}>
+      <span style={{ fontSize: '11px', color: '#55bbff', fontWeight: '600', marginBottom: '5px', fontFamily: 'system-ui, sans-serif' }}>{label}</span>
+      <div style={{ position: 'relative', width: '32px', height: '90px', background: '#001020', borderRadius: '4px', border: '1px solid #004488' }}>
         {/* Color zones - red at top, yellow middle, green at bottom (or inverted for Access) */}
         {inverted ? (
           <>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '26px', background: 'linear-gradient(to bottom, #00aa00, #88cc00)', borderRadius: '2px 2px 0 0' }}/>
-            <div style={{ position: 'absolute', top: '26px', left: 0, right: 0, height: '28px', background: 'linear-gradient(to bottom, #aaaa00, #cccc00)' }}/>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '26px', background: 'linear-gradient(to bottom, #cc4400, #aa0000)', borderRadius: '0 0 2px 2px' }}/>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '30px', background: 'linear-gradient(to bottom, #00aa00, #88cc00)', borderRadius: '3px 3px 0 0' }}/>
+            <div style={{ position: 'absolute', top: '30px', left: 0, right: 0, height: '30px', background: 'linear-gradient(to bottom, #aaaa00, #cccc00)' }}/>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30px', background: 'linear-gradient(to bottom, #cc4400, #aa0000)', borderRadius: '0 0 3px 3px' }}/>
           </>
         ) : (
           <>
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '26px', background: 'linear-gradient(to bottom, #aa0000, #cc4400)', borderRadius: '2px 2px 0 0' }}/>
-            <div style={{ position: 'absolute', top: '26px', left: 0, right: 0, height: '28px', background: 'linear-gradient(to bottom, #cccc00, #aaaa00)' }}/>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '26px', background: 'linear-gradient(to bottom, #88cc00, #00aa00)', borderRadius: '0 0 2px 2px' }}/>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '30px', background: 'linear-gradient(to bottom, #aa0000, #cc4400)', borderRadius: '3px 3px 0 0' }}/>
+            <div style={{ position: 'absolute', top: '30px', left: 0, right: 0, height: '30px', background: 'linear-gradient(to bottom, #cccc00, #aaaa00)' }}/>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30px', background: 'linear-gradient(to bottom, #88cc00, #00aa00)', borderRadius: '0 0 3px 3px' }}/>
           </>
         )}
         {/* Triangle markers showing current position */}
         <div style={{ 
           position: 'absolute', 
-          left: '-8px', 
+          left: '-9px', 
           top: `${inverted ? pct : (100 - pct)}%`, 
           transform: 'translateY(-50%)',
           width: 0, height: 0,
-          borderTop: '6px solid transparent',
-          borderBottom: '6px solid transparent',
-          borderLeft: '8px solid white'
+          borderTop: '7px solid transparent',
+          borderBottom: '7px solid transparent',
+          borderLeft: '9px solid white'
         }}/>
         <div style={{ 
           position: 'absolute', 
-          right: '-8px', 
+          right: '-9px', 
           top: `${inverted ? pct : (100 - pct)}%`, 
           transform: 'translateY(-50%)',
           width: 0, height: 0,
-          borderTop: '6px solid transparent',
-          borderBottom: '6px solid transparent',
-          borderRight: '8px solid white'
+          borderTop: '7px solid transparent',
+          borderBottom: '7px solid transparent',
+          borderRight: '9px solid white'
         }}/>
       </div>
       {/* Scale labels */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '7px', color: '#4488aa', marginTop: '2px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '8px', color: '#5599bb', marginTop: '3px', fontFamily: 'system-ui, sans-serif' }}>
         <span>{min}</span>
         <span>{max}</span>
       </div>
       {/* Current value */}
-      <div style={{ fontSize: '14px', color: '#ffffff', fontWeight: '700', fontFamily: 'monospace', marginTop: '2px' }}>{Math.round(value)}</div>
-      <div style={{ fontSize: '8px', color: '#88aacc' }}>mmHg</div>
+      <div style={{ fontSize: '16px', color: '#ffffff', fontWeight: '700', fontFamily: 'monospace', marginTop: '3px' }}>{Math.round(value)}</div>
+      <div style={{ fontSize: '9px', color: '#99bbdd', fontFamily: 'system-ui, sans-serif' }}>mmHg</div>
     </div>
   );
 };
@@ -171,26 +165,26 @@ const FFPanel = ({ bfr, hct, eff }) => {
   const s = getFFStatus(ff);
   const pf = Phys.plasmaFlow(bfr, hct);
   return (
-    <div style={{ background: '#0a1525', border: `2px solid ${s.col}55`, borderRadius: '6px', padding: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-        <span style={{ fontSize: '11px', fontWeight: '700', color: '#99ccff' }}>🔬 Filtration Fraction</span>
-        <span style={{ fontSize: '9px', padding: '2px 8px', background: `${s.col}33`, border: `1px solid ${s.col}`, borderRadius: '10px', color: s.col, fontWeight: '700' }}>{s.st}</span>
+    <div style={{ background: '#0a1525', border: `2px solid ${s.col}55`, borderRadius: '6px', padding: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <span style={{ fontSize: '13px', fontWeight: '700', color: '#aaddff', fontFamily: 'system-ui, sans-serif' }}>🔬 Filtration Fraction</span>
+        <span style={{ fontSize: '10px', padding: '3px 10px', background: `${s.col}33`, border: `1px solid ${s.col}`, borderRadius: '10px', color: s.col, fontWeight: '700' }}>{s.st}</span>
       </div>
-      <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-        <div style={{ position: 'relative', width: '70px', height: '70px', margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+        <div style={{ position: 'relative', width: '85px', height: '85px', margin: '0 auto' }}>
           <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
             <circle cx="50" cy="50" r="40" fill="none" stroke="#1a2a3a" strokeWidth="8"/>
             <circle cx="50" cy="50" r="40" fill="none" stroke={s.col} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${Math.min(ff, 50) * 5} 251`} strokeDashoffset="63" style={{ transition: 'all 0.5s' }}/>
           </svg>
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: s.col, fontFamily: 'monospace' }}>{ff.toFixed(1)}%</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: s.col, fontFamily: 'monospace' }}>{ff.toFixed(1)}%</div>
           </div>
         </div>
-        <div style={{ fontSize: '8px', color: s.col, fontWeight: '600' }}>{s.msg}</div>
+        <div style={{ fontSize: '10px', color: s.col, fontWeight: '600', fontFamily: 'system-ui, sans-serif' }}>{s.msg}</div>
       </div>
-      <div style={{ fontSize: '8px', background: '#0a1218', borderRadius: '4px', padding: '5px', border: '1px solid #2a3a4a' }}>
-        <div style={{ color: '#aabbcc', marginBottom: '3px', fontWeight: '600' }}>Equation:</div>
-        <div style={{ color: '#88ddff', fontFamily: 'monospace', fontSize: '7px', lineHeight: '1.4' }}>
+      <div style={{ fontSize: '10px', background: '#0a1218', borderRadius: '5px', padding: '8px', border: '1px solid #2a3a4a' }}>
+        <div style={{ color: '#bbccdd', marginBottom: '4px', fontWeight: '600', fontFamily: 'system-ui, sans-serif' }}>Equation:</div>
+        <div style={{ color: '#99ddff', fontFamily: 'monospace', fontSize: '9px', lineHeight: '1.5' }}>
           FF = (UF Rate ÷ 60) ÷ Plasma Flow × 100<br/>
           FF = ({eff} ÷ 60) ÷ {pf.toFixed(1)} × 100<br/>
           <span style={{ color: s.col, fontWeight: '700' }}>FF = {ff.toFixed(1)}%</span>
@@ -208,55 +202,53 @@ const CalculationsPanel = ({ set, pt, ff }) => {
   const effDose = pt.wt > 0 ? eff / pt.wt : 0;
   
   // Clearance approximation (for small solutes like urea)
-  // In CVVHDF: Clearance ≈ Dialysate flow + Ultrafiltration (convection)
   const clearance = (set.dialysate + set.replacement + set.netUF) / 60; // mL/min
   
   // Post-filter hematocrit
-  // RBC volume stays constant, but plasma is removed
   const rbcFlow = set.bfr * (pt.hct / 100);
   const postFilterFlow = set.bfr - (eff / 60);
   const postFilterHct = postFilterFlow > 0 ? Math.min(70, (rbcFlow / postFilterFlow) * 100) : 70;
   
   return (
-    <div style={{ background: '#0f1520', border: '1px solid #3a5a7a', borderRadius: '6px', padding: '8px' }}>
-      <div style={{ fontSize: '11px', fontWeight: '700', color: '#ffcc66', marginBottom: '8px' }}>📊 Calculations</div>
+    <div style={{ background: '#0f1520', border: '1px solid #3a5a7a', borderRadius: '6px', padding: '10px' }}>
+      <div style={{ fontSize: '13px', fontWeight: '700', color: '#ffcc66', marginBottom: '10px', fontFamily: 'system-ui, sans-serif' }}>📊 Calculations</div>
       
       {/* Effluent Dose */}
-      <div style={{ background: '#0a1218', borderRadius: '4px', padding: '6px', marginBottom: '6px', border: '1px solid #2a4a5a' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-          <span style={{ fontSize: '9px', color: '#99aabb' }}>Effluent Dose:</span>
-          <span style={{ fontSize: '14px', color: effDose >= 20 && effDose <= 25 ? '#00ff88' : effDose < 20 ? '#ffcc00' : '#ff8844', fontWeight: '700', fontFamily: 'monospace' }}>{effDose.toFixed(1)} <span style={{ fontSize: '9px' }}>mL/kg/hr</span></span>
+      <div style={{ background: '#0a1218', borderRadius: '5px', padding: '8px', marginBottom: '8px', border: '1px solid #2a4a5a' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <span style={{ fontSize: '11px', color: '#aabbcc', fontFamily: 'system-ui, sans-serif' }}>Effluent Dose:</span>
+          <span style={{ fontSize: '16px', color: effDose >= 20 && effDose <= 25 ? '#00ff88' : effDose < 20 ? '#ffcc00' : '#ff8844', fontWeight: '700', fontFamily: 'monospace' }}>{effDose.toFixed(1)} <span style={{ fontSize: '10px' }}>mL/kg/hr</span></span>
         </div>
-        <div style={{ fontSize: '7px', color: '#6688aa', fontFamily: 'monospace' }}>
+        <div style={{ fontSize: '9px', color: '#7799bb', fontFamily: 'monospace' }}>
           = ({set.dialysate} + {set.replacement} + {set.netUF}) ÷ {pt.wt} kg
         </div>
-        <div style={{ fontSize: '7px', color: '#88aacc', marginTop: '2px' }}>Target: 20-25 mL/kg/hr (KDIGO)</div>
+        <div style={{ fontSize: '9px', color: '#99bbdd', marginTop: '3px', fontFamily: 'system-ui, sans-serif' }}>Target: 20-25 mL/kg/hr (KDIGO)</div>
       </div>
       
       {/* Clearance */}
-      <div style={{ background: '#0a1218', borderRadius: '4px', padding: '6px', marginBottom: '6px', border: '1px solid #2a4a5a' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-          <span style={{ fontSize: '9px', color: '#99aabb' }}>Clearance (Urea):</span>
-          <span style={{ fontSize: '14px', color: '#88ddff', fontWeight: '700', fontFamily: 'monospace' }}>{clearance.toFixed(1)} <span style={{ fontSize: '9px' }}>mL/min</span></span>
+      <div style={{ background: '#0a1218', borderRadius: '5px', padding: '8px', marginBottom: '8px', border: '1px solid #2a4a5a' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <span style={{ fontSize: '11px', color: '#aabbcc', fontFamily: 'system-ui, sans-serif' }}>Clearance (Urea):</span>
+          <span style={{ fontSize: '16px', color: '#88ddff', fontWeight: '700', fontFamily: 'monospace' }}>{clearance.toFixed(1)} <span style={{ fontSize: '10px' }}>mL/min</span></span>
         </div>
-        <div style={{ fontSize: '7px', color: '#6688aa', fontFamily: 'monospace' }}>
+        <div style={{ fontSize: '9px', color: '#7799bb', fontFamily: 'monospace' }}>
           = (Dial + Post + UF) ÷ 60<br/>
           = ({set.dialysate} + {set.replacement} + {set.netUF}) ÷ 60
         </div>
       </div>
       
       {/* Post-filter Hematocrit */}
-      <div style={{ background: '#0a1218', borderRadius: '4px', padding: '6px', border: '1px solid #2a4a5a' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3px' }}>
-          <span style={{ fontSize: '9px', color: '#99aabb' }}>Post-Filter Hct:</span>
-          <span style={{ fontSize: '14px', color: postFilterHct > 50 ? '#ff4444' : postFilterHct > 45 ? '#ffcc00' : '#88ff88', fontWeight: '700', fontFamily: 'monospace' }}>{postFilterHct.toFixed(1)}%</span>
+      <div style={{ background: '#0a1218', borderRadius: '5px', padding: '8px', border: '1px solid #2a4a5a' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <span style={{ fontSize: '11px', color: '#aabbcc', fontFamily: 'system-ui, sans-serif' }}>Post-Filter Hct:</span>
+          <span style={{ fontSize: '16px', color: postFilterHct > 50 ? '#ff4444' : postFilterHct > 45 ? '#ffcc00' : '#88ff88', fontWeight: '700', fontFamily: 'monospace' }}>{postFilterHct.toFixed(1)}%</span>
         </div>
-        <div style={{ fontSize: '7px', color: '#6688aa', fontFamily: 'monospace' }}>
+        <div style={{ fontSize: '9px', color: '#7799bb', fontFamily: 'monospace' }}>
           = (BFR × Hct) ÷ (BFR - UF/60)<br/>
           = ({set.bfr} × {pt.hct}%) ÷ ({set.bfr} - {(eff/60).toFixed(1)})<br/>
           = {rbcFlow.toFixed(1)} ÷ {postFilterFlow.toFixed(1)}
         </div>
-        <div style={{ fontSize: '7px', color: postFilterHct > 50 ? '#ff8888' : '#88aacc', marginTop: '2px' }}>
+        <div style={{ fontSize: '10px', color: postFilterHct > 50 ? '#ff9999' : '#99ccdd', marginTop: '4px', fontFamily: 'system-ui, sans-serif' }}>
           {postFilterHct > 50 ? '⚠️ High! Risk of clotting' : postFilterHct > 45 ? '⚠️ Elevated' : '✓ Normal range'}
         </div>
       </div>
@@ -387,11 +379,11 @@ const Circuit = ({ set, pr, fs, run, ff, pt }) => {
 };
 
 const ScenPanel = ({ sc, cur, onSel }) => (
-  <div style={{ background: '#0f1f15', border: '1px solid #4a8a4a', borderRadius: '5px', padding: '5px' }}>
-    <div style={{ fontSize: '10px', fontWeight: '700', color: '#66ff99', marginBottom: '4px' }}>📚 Scenarios</div>
-    <div style={{ maxHeight: '160px', overflowY: 'auto' }}>
+  <div style={{ background: '#0f1f15', border: '1px solid #4a8a4a', borderRadius: '6px', padding: '8px' }}>
+    <div style={{ fontSize: '12px', fontWeight: '700', color: '#88ffaa', marginBottom: '6px' }}>📚 Scenarios</div>
+    <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
       {Object.entries(sc).map(([k, s]) => (
-        <button key={k} onClick={() => onSel(k)} style={{ width: '100%', padding: '4px 6px', marginBottom: '2px', background: cur === k ? '#2a5a2a' : '#0a1510', border: cur === k ? '1px solid #00ff88' : '1px solid #3a5a3a', borderRadius: '3px', color: cur === k ? '#00ff88' : '#aaddaa', cursor: 'pointer', textAlign: 'left', fontSize: '8px' }}>
+        <button key={k} onClick={() => onSel(k)} style={{ width: '100%', padding: '6px 8px', marginBottom: '3px', background: cur === k ? '#2a5a2a' : '#0a1510', border: cur === k ? '2px solid #00ff88' : '1px solid #3a5a3a', borderRadius: '4px', color: cur === k ? '#00ff88' : '#bbeecc', cursor: 'pointer', textAlign: 'left', fontSize: '10px', fontFamily: 'system-ui, sans-serif' }}>
           <div style={{ fontWeight: cur === k ? '700' : '500' }}>{s.name}</div>
         </button>
       ))}
@@ -400,43 +392,43 @@ const ScenPanel = ({ sc, cur, onSel }) => (
 );
 
 const PatientInputs = ({ pt, setPt }) => (
-  <div style={{ background: '#0f1525', border: '1px solid #4a6a8a', borderRadius: '5px', padding: '10px' }}>
-    <div style={{ fontSize: '11px', fontWeight: '700', color: '#99ccff', marginBottom: '10px' }}>👤 Patient Settings</div>
-    <div style={{ marginBottom: '10px' }}>
-      <div style={{ fontSize: '10px', color: '#88aacc', marginBottom: '4px' }}>Weight (kg)</div>
+  <div style={{ background: '#0f1525', border: '1px solid #4a6a8a', borderRadius: '6px', padding: '12px' }}>
+    <div style={{ fontSize: '12px', fontWeight: '700', color: '#aaddff', marginBottom: '12px', fontFamily: 'system-ui, sans-serif' }}>👤 Patient Settings</div>
+    <div style={{ marginBottom: '12px' }}>
+      <div style={{ fontSize: '11px', color: '#99bbdd', marginBottom: '5px', fontFamily: 'system-ui, sans-serif' }}>Weight (kg)</div>
       <input 
         type="number" 
         value={pt.wt} 
         onChange={e => setPt(p => ({...p, wt: Number(e.target.value)}))}
         min={30} max={200} step={1}
-        style={{ width: '100%', padding: '8px', background: '#0a1520', border: '2px solid #44aaff', borderRadius: '4px', color: '#44aaff', fontSize: '16px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
+        style={{ width: '100%', padding: '10px', background: '#0a1520', border: '2px solid #44aaff', borderRadius: '5px', color: '#44aaff', fontSize: '18px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
       />
     </div>
     <div>
-      <div style={{ fontSize: '10px', color: '#88aacc', marginBottom: '4px' }}>Hematocrit (%)</div>
+      <div style={{ fontSize: '11px', color: '#99bbdd', marginBottom: '5px', fontFamily: 'system-ui, sans-serif' }}>Hematocrit (%)</div>
       <input 
         type="number" 
         value={pt.hct} 
         onChange={e => setPt(p => ({...p, hct: Number(e.target.value)}))}
         min={15} max={55} step={1}
-        style={{ width: '100%', padding: '8px', background: '#0a1520', border: '2px solid #ff8888', borderRadius: '4px', color: '#ff8888', fontSize: '16px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
+        style={{ width: '100%', padding: '10px', background: '#0a1520', border: '2px solid #ff8888', borderRadius: '5px', color: '#ff8888', fontSize: '18px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }}
       />
     </div>
   </div>
 );
 
 const TeachPanel = ({ sc, set, ff }) => {
-  if (!sc) return <div style={{ background: '#0a1a28', border: '1px solid #3a5a7a', borderRadius: '5px', padding: '10px', textAlign: 'center' }}><div style={{ fontSize: '28px' }}>🎓</div><div style={{ fontSize: '11px', color: '#99bbdd' }}>Select a scenario to begin</div></div>;
+  if (!sc) return <div style={{ background: '#0a1a28', border: '1px solid #3a5a7a', borderRadius: '6px', padding: '14px', textAlign: 'center' }}><div style={{ fontSize: '32px' }}>🎓</div><div style={{ fontSize: '13px', color: '#aaccee', fontFamily: 'system-ui, sans-serif' }}>Select a scenario to begin</div></div>;
   const fb = [];
   if (ff > 30) fb.push({ t: 'c', m: `FF ${ff.toFixed(1)}% too high!` });
   else if (ff > 25) fb.push({ t: 'w', m: `FF ${ff.toFixed(1)}% elevated` });
   return (
-    <div style={{ background: '#0a1a28', border: '1px solid #3a5a7a', borderRadius: '5px', padding: '8px', maxHeight: '180px', overflowY: 'auto' }}>
-      <div style={{ fontSize: '11px', fontWeight: '700', color: '#ffdd66', marginBottom: '3px' }}>{sc.name}</div>
-      <div style={{ fontSize: '9px', color: '#bbccdd', marginBottom: '5px', lineHeight: '1.3' }}>{sc.desc}</div>
-      {fb.map((f, i) => <div key={i} style={{ padding: '4px 6px', marginBottom: '3px', background: f.t === 'c' ? '#3a1a1a' : '#3a3a1a', border: `1px solid ${f.t === 'c' ? '#ff5555' : '#ffcc00'}`, borderRadius: '4px', fontSize: '9px', color: f.t === 'c' ? '#ff7777' : '#ffee77', fontWeight: '600' }}>{f.t === 'c' ? '🚨' : '⚠️'} {f.m}</div>)}
-      <div style={{ fontSize: '9px', color: '#99aabb', fontWeight: '600', marginTop: '4px' }}>Key Points:</div>
-      <ul style={{ margin: '4px 0 0 0', paddingLeft: '14px', fontSize: '9px', color: '#aaccee', lineHeight: '1.4' }}>{sc.tips.map((t, i) => <li key={i} style={{ marginBottom: '2px' }}>{t}</li>)}</ul>
+    <div style={{ background: '#0a1a28', border: '1px solid #3a5a7a', borderRadius: '6px', padding: '10px', maxHeight: '200px', overflowY: 'auto' }}>
+      <div style={{ fontSize: '13px', fontWeight: '700', color: '#ffdd66', marginBottom: '5px', fontFamily: 'system-ui, sans-serif' }}>{sc.name}</div>
+      <div style={{ fontSize: '11px', color: '#ccddee', marginBottom: '8px', lineHeight: '1.4', fontFamily: 'system-ui, sans-serif' }}>{sc.desc}</div>
+      {fb.map((f, i) => <div key={i} style={{ padding: '6px 8px', marginBottom: '4px', background: f.t === 'c' ? '#3a1a1a' : '#3a3a1a', border: `1px solid ${f.t === 'c' ? '#ff5555' : '#ffcc00'}`, borderRadius: '5px', fontSize: '11px', color: f.t === 'c' ? '#ff8888' : '#ffee88', fontWeight: '600', fontFamily: 'system-ui, sans-serif' }}>{f.t === 'c' ? '🚨' : '⚠️'} {f.m}</div>)}
+      <div style={{ fontSize: '11px', color: '#aabbcc', fontWeight: '600', marginTop: '6px', fontFamily: 'system-ui, sans-serif' }}>Key Points:</div>
+      <ul style={{ margin: '5px 0 0 0', paddingLeft: '16px', fontSize: '11px', color: '#bbddff', lineHeight: '1.5', fontFamily: 'system-ui, sans-serif' }}>{sc.tips.map((t, i) => <li key={i} style={{ marginBottom: '3px' }}>{t}</li>)}</ul>
     </div>
   );
 };
@@ -553,24 +545,24 @@ export default function CRRTSimulator() {
       {showQ && <QuizModal onClose={() => setShowQ(false)} />}
       {showFC && <FCModal onClose={() => setShowFC(false)} />}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 8px', background: '#121f30', borderRadius: '5px', marginBottom: '6px', border: '1px solid #2a4a6a', flexWrap: 'wrap', gap: '6px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: '#121f30', borderRadius: '6px', marginBottom: '8px', border: '1px solid #2a4a6a', flexWrap: 'wrap', gap: '8px' }}>
         <div>
-          <div style={{ fontSize: '13px', fontWeight: '700', background: 'linear-gradient(90deg, #00ddff, #00ff88)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CRRT Simulator</div>
-          <div style={{ fontSize: '7px', color: '#00ff88' }}>Complete: Scenarios • FF • Drugs • Quiz • Filter Change</div>
+          <div style={{ fontSize: '16px', fontWeight: '700', background: 'linear-gradient(90deg, #00ddff, #00ff88)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>CRRT Simulator</div>
+          <div style={{ fontSize: '10px', color: '#00ff88', fontFamily: 'system-ui, sans-serif' }}>Complete: Scenarios • FF • Quiz • Filter Change</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '8px', color: '#6a8a9a' }}>Filter: <span style={{ color: '#ffcc00' }}>{fs.age.toFixed(1)}h</span></span>
-          <span style={{ fontSize: '8px', color: '#6a8a9a' }}>Time: <span style={{ color: '#88aacc' }}>{fmt(time)}</span></span>
-          <button onClick={() => setShowQ(true)} style={{ padding: '3px 8px', background: '#4a3a6a', border: '1px solid #6a4a8a', borderRadius: '3px', color: '#cc88ff', cursor: 'pointer', fontSize: '8px' }}>📝Quiz</button>
-          <button onClick={() => setShowFC(true)} style={{ padding: '3px 8px', background: '#3a4a6a', border: '1px solid #4a6a8a', borderRadius: '3px', color: '#88ccff', cursor: 'pointer', fontSize: '8px' }}>🔄Filter</button>
-          <select value={spd} onChange={e => setSpd(Number(e.target.value))} style={{ padding: '2px 4px', background: '#1a2a3a', border: '1px solid #3a5a7a', borderRadius: '2px', color: '#88ccff', fontSize: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '11px', color: '#7799aa', fontFamily: 'system-ui, sans-serif' }}>Filter: <span style={{ color: '#ffcc00', fontWeight: '600' }}>{fs.age.toFixed(1)}h</span></span>
+          <span style={{ fontSize: '11px', color: '#7799aa', fontFamily: 'system-ui, sans-serif' }}>Time: <span style={{ color: '#88aacc', fontWeight: '600' }}>{fmt(time)}</span></span>
+          <button onClick={() => setShowQ(true)} style={{ padding: '5px 12px', background: '#4a3a6a', border: '1px solid #6a4a8a', borderRadius: '4px', color: '#cc88ff', cursor: 'pointer', fontSize: '11px', fontFamily: 'system-ui, sans-serif' }}>📝 Quiz</button>
+          <button onClick={() => setShowFC(true)} style={{ padding: '5px 12px', background: '#3a4a6a', border: '1px solid #4a6a8a', borderRadius: '4px', color: '#88ccff', cursor: 'pointer', fontSize: '11px', fontFamily: 'system-ui, sans-serif' }}>🔄 Filter</button>
+          <select value={spd} onChange={e => setSpd(Number(e.target.value))} style={{ padding: '4px 8px', background: '#1a2a3a', border: '1px solid #3a5a7a', borderRadius: '3px', color: '#88ccff', fontSize: '11px', fontFamily: 'system-ui, sans-serif' }}>
             <option value={1}>1x</option><option value={60}>1m/s</option><option value={600}>10m/s</option>
           </select>
-          <button onClick={() => upd('run', !set.run)} style={{ padding: '4px 10px', fontSize: '9px', fontWeight: '700', background: set.run ? '#cc0000' : '#00cc00', border: 'none', borderRadius: '3px', color: 'white', cursor: 'pointer' }}>{set.run ? '⏹' : '▶'}</button>
+          <button onClick={() => upd('run', !set.run)} style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '700', background: set.run ? '#cc0000' : '#00cc00', border: 'none', borderRadius: '4px', color: 'white', cursor: 'pointer' }}>{set.run ? '⏹' : '▶'}</button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 200px', gap: '8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 220px', gap: '10px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <ScenPanel sc={scenarios} cur={curSc} onSel={loadSc} />
           <PatientInputs pt={pt} setPt={setPt} />
@@ -580,7 +572,7 @@ export default function CRRTSimulator() {
           <div style={{ height: '210px', border: '1px solid #2a4a6a', borderRadius: '6px', overflow: 'hidden' }}>
             <Circuit set={set} pr={pr} fs={fs} run={set.run} ff={ff} pt={pt} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', background: '#0f1a25', borderRadius: '5px', padding: '8px', border: '1px solid #2a4a5a' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', background: '#0f1a25', borderRadius: '6px', padding: '10px', border: '1px solid #2a4a5a' }}>
             {[
               ['Pre', 'pbp', '#44bbff', 'mL/h', 10, 0, 3000],
               ['BFR', 'bfr', '#ff7777', 'mL/min', 1, 50, 450],
@@ -589,7 +581,7 @@ export default function CRRTSimulator() {
               ['UF Rate', 'netUF', '#ffcc44', 'mL/h', 1, 0, 500]
             ].map(([l, k, c, unit, step, min, max]) => (
               <div key={k} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '10px', color: c, fontWeight: '700', marginBottom: '2px' }}>{l}</div>
+                <div style={{ fontSize: '12px', color: c, fontWeight: '700', marginBottom: '4px', fontFamily: 'system-ui, sans-serif' }}>{l}</div>
                 <input 
                   type="number" 
                   value={set[k]} 
@@ -597,9 +589,9 @@ export default function CRRTSimulator() {
                   step={step}
                   min={min}
                   max={max}
-                  style={{ width: '65px', padding: '6px 4px', background: '#0a1520', border: `2px solid ${c}`, borderRadius: '4px', color: c, fontSize: '16px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }} 
+                  style={{ width: '75px', padding: '8px 4px', background: '#0a1520', border: `2px solid ${c}`, borderRadius: '5px', color: c, fontSize: '18px', fontWeight: '700', textAlign: 'center', fontFamily: 'monospace' }} 
                 />
-                <div style={{ fontSize: '9px', color: '#99aabb', marginTop: '2px' }}>{unit}</div>
+                <div style={{ fontSize: '10px', color: '#aabbcc', marginTop: '3px', fontFamily: 'system-ui, sans-serif' }}>{unit}</div>
               </div>
             ))}
           </div>
